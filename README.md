@@ -34,3 +34,9 @@ Then open the address Vite prints (usually http://localhost:5173).
 - With "reduce motion" switched on in the OS, animations are cut back to near nothing and the layout stays the same.
 - The numbers inside the miniatures (XP, leaderboard, map shading) are demo data and are labelled as such on the page.
 - The Indian-language strings in the Sakhi and Abhay miniatures were written for this page and have not been checked by native speakers.
+
+## The public link
+
+The site is published at https://shubhisingh1510.github.io/portfolio/ from the `gh-pages` branch of
+`shubhisingh1510/portfolio`. That branch holds only the built `dist/` folder. To update the live
+site after a change, run `npm run build` and push the contents of `dist/` to `gh-pages` again.
