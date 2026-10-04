@@ -1,5 +1,5 @@
-import { useRef, type ReactNode } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { useRef, useState, type ReactNode, type PointerEvent as RPointerEvent } from "react";
+import { motion, useMotionValue, useReducedMotion, useScroll, useSpring, useTransform } from "motion/react";
 import { Headline, Magnetic, Reveal, Tilt } from "../components/Motion";
 import { Star } from "../components/Doodles";
 import { useFinePointer } from "../lib/hooks";
@@ -22,6 +22,10 @@ type Project = {
   fg: string;
   accent: string;
   tone: string;
+  /** how strong the paper highlight is; dark pages want much less */
+  light?: number;
+  /** the miniature is phone-shaped, so keep its frame narrow */
+  narrow?: boolean;
   titleStyle?: React.CSSProperties;
   mini: ReactNode;
 };
@@ -61,6 +65,7 @@ const projects: Project[] = [
     fg: "#3B1A28",
     accent: "#7A2540",
     tone: "plum",
+    narrow: true,
     titleStyle: { fontFamily: "var(--font-serif)", fontStyle: "italic", fontWeight: 400, letterSpacing: "-0.02em" },
     mini: <SakhiMini />,
   },
@@ -110,6 +115,7 @@ const projects: Project[] = [
     fg: "#E8EDF2",
     accent: "#5EE6C5",
     tone: "ivory",
+    light: 0.05,
     mini: <TerraMini />,
   },
   {
@@ -135,6 +141,38 @@ const projects: Project[] = [
   },
 ];
 
+/** A sticker on the corner of each miniature. Hover the project and its corner peels back. */
+function PeelSticker({ p, index }: { p: Project; index: number }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <button
+      type="button"
+      aria-pressed={open}
+      aria-label="Peel the sticker"
+      onClick={() => setOpen((o) => !o)}
+      data-cursor="PEEL"
+      className="peel absolute -right-2 -top-8 z-20 size-[76px] rotate-[9deg] md:-right-7 md:-top-10"
+      style={{ "--flap": `color-mix(in srgb, ${p.accent} 62%, #fff)` } as React.CSSProperties}
+    >
+      {/* what was under it all along */}
+      <span className="absolute inset-0 rounded-[11px] bg-ivory text-ink">
+        <span className="absolute bottom-[9px] right-[5px] origin-center -rotate-45 font-mono text-[8.5px] leading-none tracking-wider">
+          {String(index + 1).padStart(2, "0")}/06
+        </span>
+      </span>
+      <span className="peel-face absolute inset-0 rounded-[11px] p-2 text-left" style={{ background: p.accent, color: p.bg }}>
+        <span className="block font-mono text-[8.5px] uppercase leading-tight tracking-widest">
+          no.
+          <br />
+          {String(index + 1).padStart(2, "0")}
+        </span>
+        <Star className="absolute left-2 top-9 size-4" />
+      </span>
+      <span className="peel-flap" />
+    </button>
+  );
+}
+
 function Spread({ p, index }: { p: Project; index: number }) {
   const ref = useRef<HTMLElement>(null);
   const fine = useFinePointer();
@@ -146,27 +184,50 @@ function Spread({ p, index }: { p: Project; index: number }) {
   const scale = useTransform(scrollYProgress, [0, 1], [0.94, 1]);
   const still = !fine || reduce;
 
+  // paper, not a 3D object: things shift a few pixels against the pointer, each at its own speed
+  const mx = useSpring(useMotionValue(0), { stiffness: 90, damping: 18 });
+  const my = useSpring(useMotionValue(0), { stiffness: 90, damping: 18 });
+  const labelX = useTransform(mx, (v) => v * 9);
+  const titleX = useTransform(mx, (v) => v * 4);
+  const miniX = useTransform(mx, (v) => v * -5);
+  const miniY = useTransform(my, (v) => v * -4);
+  const move = (e: RPointerEvent) => {
+    if (still || !ref.current) return;
+    const r = ref.current.getBoundingClientRect();
+    mx.set(((e.clientX - r.left) / r.width - 0.5) * 2);
+    my.set(((e.clientY - r.top) / r.height - 0.5) * 2);
+  };
+  const rest = () => {
+    mx.set(0);
+    my.set(0);
+  };
+
   return (
     <motion.article
       ref={ref}
       data-tone={p.tone}
       className="relative mx-2.5 mb-5 overflow-hidden rounded-[28px] px-5 py-14 md:mx-6 md:mb-8 md:rounded-[48px] md:px-14 md:py-24"
       style={{ background: p.bg, color: p.fg, rotate: still ? 0 : rotate, scale: still ? 1 : scale }}
+      onPointerMove={move}
+      onPointerLeave={rest}
     >
-      <div className="mx-auto grid max-w-[1400px] items-center gap-10 lg:grid-cols-12 lg:gap-14">
+      <div aria-hidden className="lit pointer-events-none absolute inset-0" style={{ "--light": p.light ?? 0.24 } as React.CSSProperties} />
+      <div className="relative mx-auto grid max-w-[1400px] items-center gap-10 lg:grid-cols-12 lg:gap-14">
         <div className={`lg:col-span-5 ${flip ? "lg:order-2" : ""}`}>
-          <p className="label flex items-center gap-3 opacity-70">
+          <motion.p className="label flex items-center gap-3 opacity-70" style={{ x: labelX }}>
             <span className="shrink-0 whitespace-nowrap">Project {String(index + 1).padStart(2, "0")}</span>
             <span className="h-px w-6 shrink-0 bg-current md:w-10" />
             <span>{p.subtitle}</span>
-          </p>
+          </motion.p>
 
+          <motion.div style={{ x: titleX }}>
           <Headline
             as="h3"
             text={p.title}
             className="mt-5 normal-case text-[clamp(3rem,7.4vw,6.6rem)] leading-[0.95]"
             style={p.titleStyle}
           />
+          </motion.div>
 
           <Reveal delay={0.1}>
             <p className="mt-6 max-w-[42ch] text-[1.08rem] leading-[1.55]">{p.about}</p>
@@ -212,7 +273,15 @@ function Spread({ p, index }: { p: Project; index: number }) {
           viewport={{ once: true, margin: "0px 0px -15% 0px" }}
           transition={{ type: "spring", stiffness: 70, damping: 15 }}
         >
-          <Tilt max={4}>{p.mini}</Tilt>
+          <motion.div className={`group/mini relative ${p.narrow ? "mx-auto max-w-[25rem]" : ""}`} style={{ x: miniX, y: miniY }}>
+            {/* the shadow it casts on the page; it deepens a little when you reach for it */}
+            <span
+              aria-hidden
+              className="absolute inset-x-[7%] -bottom-4 h-12 rounded-[50%] bg-[#2a2320] opacity-25 blur-2xl transition-opacity duration-500 group-hover/mini:opacity-45"
+            />
+            <Tilt max={4}>{p.mini}</Tilt>
+            <PeelSticker p={p} index={index} />
+          </motion.div>
         </motion.div>
       </div>
     </motion.article>

@@ -7,6 +7,12 @@
 @import "@fontsource/dm-mono/500.css";
 @import "@fontsource-variable/playfair-display/wght.css";
 
+@property --peel {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 8px;
+}
+
 @theme {
   --color-ivory: #fbf6ec;
   --color-paper: #f3ecdd;
@@ -153,6 +159,60 @@ html.has-cursor * {
 
 p {
   text-wrap: pretty;
+}
+
+/* ---- the torch (see components/Torch.tsx) ---- */
+.torch {
+  --tx: 70%;
+  --ty: 45%;
+  --on: 0;
+}
+.torch-glow {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 620px;
+  height: 620px;
+  margin: -310px 0 0 -310px;
+  transform: translate3d(var(--tx), var(--ty), 0);
+  background: radial-gradient(closest-side, rgb(246 226 160 / 0.17), rgb(246 226 160 / 0.07) 46%, transparent 74%);
+  filter: blur(8px);
+  opacity: var(--on);
+  transition: opacity 0.7s var(--ease-soft);
+}
+.torch-lit {
+  opacity: var(--on);
+  transition: opacity 0.7s var(--ease-soft);
+  -webkit-mask-image: radial-gradient(circle 270px at var(--tx) var(--ty), #000 0%, #000 28%, rgb(0 0 0 / 0.55) 56%, transparent 86%);
+  mask-image: radial-gradient(circle 270px at var(--tx) var(--ty), #000 0%, #000 28%, rgb(0 0 0 / 0.55) 56%, transparent 86%);
+}
+
+/* ---- the sticker that peels (see sections/Projects.tsx) ---- */
+.peel {
+  --peel: 8px;
+  transition: --peel 0.55s var(--ease-soft);
+}
+.group\/mini:hover .peel,
+.peel:focus-visible,
+.peel[aria-pressed="true"] {
+  --peel: 46px;
+}
+.peel-face {
+  clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--peel)), calc(100% - var(--peel)) 100%, 0 100%);
+}
+.peel-flap {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  width: var(--peel);
+  height: var(--peel);
+  background: linear-gradient(to bottom right, var(--flap) 0 50%, transparent 50%);
+  filter: drop-shadow(2px 2px 2px rgb(0 0 0 / 0.28));
+}
+
+/* one soft light from the top left, on surfaces that are meant to feel like paper */
+.lit {
+  background-image: radial-gradient(90% 70% at 12% 0%, rgb(255 255 255 / var(--light, 0.24)), transparent 68%);
 }
 
 .paper-shadow {

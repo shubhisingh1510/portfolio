@@ -20,8 +20,11 @@ function Sticker({
   my,
   area,
   draggable,
+  under,
 }: {
   children: ReactNode;
+  /** left behind on the poster when the sticker is dragged away */
+  under?: string;
   className: string;
   depth: number;
   rotate: number;
@@ -35,6 +38,17 @@ function Sticker({
   const y = useTransform(my, (v) => v * depth);
   return (
     <motion.div className={`absolute z-10 ${className}`} style={{ x, y }}>
+      {under && draggable && (
+        <motion.span
+          aria-hidden
+          className="absolute inset-0 grid place-items-center whitespace-nowrap font-mono text-[10px] text-ink-soft"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 3 }}
+        >
+          {under}
+        </motion.span>
+      )}
       <motion.div
         initial={{ scale: 0, rotate: rotate - 40, opacity: 0 }}
         animate={{ scale: 1, rotate, opacity: 1 }}
@@ -149,6 +163,11 @@ export function Hero() {
           animate={{ opacity: 1 }}
           transition={{ delay: 1.9, duration: 0.8 }}
         >
+          <span className="mb-2 inline-flex items-center gap-2 rounded-full border border-ink/25 px-2.5 py-1 text-ink">
+            <span className="size-1.5 animate-blink rounded-full bg-coral" />
+            Status / Building
+          </span>
+          <br />
           12.9692° N, 79.1559° E · Vellore
           <br />
           scroll, and please hover things ↓
@@ -172,7 +191,7 @@ export function Hero() {
           {"{ }"}
         </span>
       </Sticker>
-      <Sticker {...s} depth={16} rotate={5} delay={1.75} className="hidden md:block md:right-[5%] md:top-[52%]">
+      <Sticker {...s} depth={16} rotate={5} delay={1.75} under="you found this 👀" className="hidden md:block md:right-[5%] md:top-[52%]">
         <span className="paper-shadow flex gap-1 border-[1.5px] border-ink bg-ivory p-1.5">
           {["bg-butter", "bg-pink", "bg-lavender", "bg-powder", "bg-sage"].map((c) => (
             <i key={c} className={`block h-9 w-5 ${c}`} />

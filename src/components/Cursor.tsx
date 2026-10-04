@@ -44,6 +44,7 @@ export function Cursor() {
       read(e.target);
     };
     // scrolling moves content under a still pointer, so re-read what is there
+    // also fired as "cursor:refresh" by anything that changes its own data-cursor while hovered
     const scroll = () => read(document.elementFromPoint(x.get(), y.get()));
     const press = () => setDown(true);
     const release = () => setDown(false);
@@ -51,6 +52,7 @@ export function Cursor() {
 
     window.addEventListener("pointermove", move, { passive: true });
     window.addEventListener("scroll", scroll, { passive: true });
+    window.addEventListener("cursor:refresh", scroll);
     window.addEventListener("pointerdown", press);
     window.addEventListener("pointerup", release);
     root.addEventListener("pointerleave", leave);
@@ -58,6 +60,7 @@ export function Cursor() {
       root.classList.remove("has-cursor");
       window.removeEventListener("pointermove", move);
       window.removeEventListener("scroll", scroll);
+      window.removeEventListener("cursor:refresh", scroll);
       window.removeEventListener("pointerdown", press);
       window.removeEventListener("pointerup", release);
       root.removeEventListener("pointerleave", leave);

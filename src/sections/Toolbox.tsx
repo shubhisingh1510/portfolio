@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { Headline, Reveal } from "../components/Motion";
 import { Arrow, Star } from "../components/Doodles";
@@ -56,6 +56,54 @@ function Thing({ tool, open, setOpen }: { tool: Tool; open: boolean; setOpen: (v
   );
 }
 
+/** A decorative star. It is only decorative. */
+function DeskStar() {
+  const [clicks, setClicks] = useState(0);
+  const [say, setSay] = useState<string | null>(null);
+  const timer = useRef<number | undefined>(undefined);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+
+  const click = () => {
+    const n = clicks + 1;
+    setClicks(n);
+    const line = n === 5 ? "you really clicked that?" : n === 9 ? "respect." : null;
+    if (!line) return;
+    setSay(line);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setSay(null), 2600);
+  };
+
+  return (
+    <div className="absolute right-5 top-5 flex items-center gap-2">
+      <AnimatePresence>
+        {say && (
+          <motion.span
+            key={say}
+            role="status"
+            className="font-mono text-[11px] text-ink-soft"
+            initial={{ opacity: 0, x: 8 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0 }}
+          >
+            {say}
+          </motion.span>
+        )}
+      </AnimatePresence>
+      <motion.button
+        type="button"
+        aria-label="A star"
+        onClick={click}
+        className="grid size-8 place-items-center rounded-full"
+        animate={{ rotate: clicks * 45 }}
+        whileTap={{ scale: 0.8 }}
+        transition={{ type: "spring", stiffness: 300, damping: 14 }}
+      >
+        <Star className="size-6 text-coral" />
+      </motion.button>
+    </div>
+  );
+}
+
 export function Toolbox() {
   const [open, setOpen] = useState<string | null>(null);
   return (
@@ -73,9 +121,12 @@ export function Toolbox() {
         </div>
 
         {/* the desk */}
-        <div className="relative mt-12 rounded-[28px] bg-paper px-4 py-10 md:mt-16 md:rounded-[44px] md:px-12 md:py-16">
-          <Star className="absolute right-6 top-6 size-6 text-coral" />
-          <span className="label absolute bottom-5 right-6 text-ink-soft">fig. 1 — desk, lightly tidied</span>
+        <div className="lit relative mt-12 rounded-[28px] bg-paper px-4 py-10 shadow-[inset_0_-18px_30px_-22px_rgb(42_35_32/0.18)] md:mt-16 md:rounded-[44px] md:px-12 md:py-16" style={{ "--light": 0.5 } as React.CSSProperties}>
+          <DeskStar />
+          <span className="label group absolute bottom-5 right-6 text-ink-soft" tabIndex={0}>
+            <span className="group-hover:hidden group-focus:hidden">fig. 1 — desk, lightly tidied</span>
+            <span className="hidden group-hover:inline group-focus:inline">fig. 1 — it did not look like this before</span>
+          </span>
           <ul className="m-0 flex flex-wrap items-start gap-x-5 gap-y-6 p-0 pb-8 md:gap-x-9 md:gap-y-10">
             {tools.map((tool) => (
               <Thing

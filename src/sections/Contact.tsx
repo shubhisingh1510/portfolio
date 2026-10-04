@@ -94,7 +94,12 @@ export function Contact() {
         <footer className="label mt-24 flex flex-col gap-2 border-t-[1.5px] border-ink pt-5 md:mt-36 md:flex-row md:justify-between">
           <span>© 2026 Shubhi Singh</span>
           <span>{me.location}</span>
-          <span>Built with React + too much attention to detail</span>
+          <span className="group relative" tabIndex={0}>
+            Built with React + too much attention to detail
+            <span className="pointer-events-none absolute bottom-full right-0 mb-1 whitespace-nowrap normal-case tracking-normal opacity-0 transition-opacity duration-300 group-hover:opacity-70 group-focus:opacity-70">
+              you read the footer. of course you did.
+            </span>
+          </span>
         </footer>
       </div>
     </section>
